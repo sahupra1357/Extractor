@@ -1,0 +1,162 @@
+import asyncio
+from typing import List, Tuple
+
+from fastapi import HTTPException
+from openai import OpenAI, OpenAIError
+from app.core.config import settings
+from app.gptocr.logger import logger
+from app.gptocr.utilityFunction import retry_with_backoff
+
+# ----------------------------
+# OCR Service
+# ----------------------------
+
+class OCRService:
+    def __init__(self):
+        try:
+            # self.client = AsyncAzureOpenAI(
+            #     azure_endpoint=Settings.AZURE_OPENAI_ENDPOINT,
+            #     api_version=Settings.OPENAI_API_VERSION,
+            #     api_key=Settings.OPENAI_API_KEY,
+            # )
+            #self.client = OpenAI(api_key=settings.model_config.OPENAI_API_KEY)
+            self.client = OpenAI()
+        except Exception as e:
+            logger.exception(f"Failed to initialize OpenAI client: {e}")
+            raise RuntimeError(f"Failed to initialize OpenAI client: {e}")
+
+    async def perform_ocr_on_batch(self, image_batch: List[Tuple[int, str]]) -> str:
+        """
+        Perform OCR on a batch of images using OpenAI's API with retry logic.
+
+        Args:
+            image_batch (List[Tuple[int, str]]): List of tuples containing page numbers and base64-encoded image URLs.
+
+        Returns:
+            str: Extracted text.
+
+        Raises:
+            HTTPException: If OCR fails after retries.
+        """
+        async def ocr_request():
+            try:
+                messages = self.build_ocr_messages(image_batch)
+                logger.info(
+                    f"Sending OCR request to OpenAI with {len(image_batch)} images."
+                )
+                #response = await self.client.chat.completions.create(
+                response = self.client.chat.completions.create(
+                    #model=Settings.OPENAI_DEPLOYMENT_ID,
+                    model="gpt-4o",
+                    messages=messages,
+                    temperature=0.1,
+                    max_tokens=4000,
+                    top_p=0.95,
+                    frequency_penalty=0,
+                    presence_penalty=0,
+                )
+                return self.extract_text_from_response(response)
+            except OpenAIError as e:
+                if "rate limit" in str(e).lower():
+                    raise HTTPException(
+                        status_code=429, detail="Rate limit exceeded."
+                    )
+                else:
+                    logger.error(f"OpenAI API error: {e}")
+                    raise HTTPException(
+                        status_code=502,
+                        detail=f"OCR processing failed: {e}",
+                    )
+            except asyncio.TimeoutError:
+                raise HTTPException(
+                    status_code=504,
+                    detail="Timeout occurred while communicating with OCR service.",
+                )
+            except Exception as e:
+                logger.exception(f"Unexpected error during OCR processing: {e}")
+                raise HTTPException(
+                    status_code=500, detail=f"OCR processing failed: {e}"
+                )
+
+        return await retry_with_backoff(ocr_request)
+
+    def build_ocr_messages(self, image_batch: List[Tuple[int, str]]) -> List[dict]:
+        """
+        Build the message payload for the OCR request.
+
+        Args:
+            image_batch (List[Tuple[int, str]]): List of tuples containing page numbers and image URLs.
+
+        Returns:
+            List[dict]: The message payload.
+        """
+        messages = [
+            {
+                "role": "system",
+                "content": "You are an OCR assistant. Extract all text from the provided images (Describe images as if you're explaining them to a blind person eg: `[Image: In this picture, 8 people are posed hugging each other]`), which are attached to the document. Use markdown formatting for:\n\n- Headings (# for main, ## for sub)\n- Lists (- for unordered, 1. for ordered)\n- Emphasis (* for italics, ** for bold)\n- Links ([text](URL))\n- Tables (use markdown table format)\n\nFor non-text elements, describe them: [Image: Brief description]\n\nMaintain logical flow and use horizontal rules (---) to separate sections if needed. Adjust formatting to preserve readability.\n\nNote any issues or ambiguities at the end of your output.\n\nBe thorough and accurate in transcribing all text content.",
+            },
+            {
+                "role": "user",
+                "content": "Never skip any context! Convert document as is be creative to use markdown effectively to reproduce the same document by using markdown. Translate image text to markdown sequentially. Preserve order and completeness. Separate images with `---`. No skips or comments. Start with first image immediately.",
+            },
+        ]
+
+        if len(image_batch) == 1:
+            # Batch size = 1: Mention the specific page number
+            page_num, img_url = image_batch[0]
+            messages.append({
+                "role": "user",
+                "content": f"Page {page_num}:",
+            })
+            messages.append({
+                "role": "user",
+                "content": [
+                    {"type": "image_url", "image_url": {"url": img_url}}
+                ],
+            })
+        else:
+            # Batch size >1: Include all page numbers and stress returning page numbers in response
+            messages.append({
+                "role": "user",
+                "content": "Please perform OCR on the following images. Ensure that the extracted text includes the corresponding page numbers.",
+            })
+            content = []
+            for page_num, img_url in image_batch:
+                content.append({"type": "text", "text": f"Page {page_num}:"})
+                content.append({"type": "image_url", "image_url": {"url": img_url}})
+            messages.append({
+                "role": "user",
+                "content": content,
+            })
+
+        return messages
+
+    def extract_text_from_response(self, response) -> str:
+        """
+        Extract text from the OpenAI API response.
+
+        Args:
+            response: The response object from OpenAI API.
+
+        Returns:
+            str: The extracted text.
+
+        Raises:
+            HTTPException: If no text is extracted.
+        """
+        if (
+            not response.choices
+            or not hasattr(response.choices[0].message, "content")
+            or not response.choices[0].message.content
+        ):
+            logger.warning("No text extracted from OCR.")
+            raise HTTPException(
+                status_code=500, detail="No text extracted from OCR."
+            )
+
+        extracted_text = response.choices[0].message.content.strip()
+        logger.info(f"Extracted text length: {len(extracted_text)} characters.")
+        return extracted_text
+
+# Initialize OCR Service
+ocr_service = OCRService()
