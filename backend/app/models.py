@@ -44,7 +44,7 @@ class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
     items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
-    extractions: list["DOcExtraction"] = Relationship(back_populates="owner", cascade_delete=True)
+    extrs: list["Extr"] = Relationship(back_populates="owner", cascade_delete=True)
 
 
 
@@ -115,11 +115,25 @@ class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
 
+
+# # ExtractionList
+# class DOcExtraction(SQLModel, table=True):
+#     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+#     filename: str = Field(max_length=255)
+#     owner_id: uuid.UUID = Field(
+#         foreign_key="user.id", nullable=False, ondelete="CASCADE"
+#     )
+#     owner: User | None = Relationship(back_populates="extractions")
+
 # ExtractionList
-class DOcExtraction(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+class ExtrBase(SQLModel):
+    filename: str = Field(min_length=1, max_length=255)
+    pagecount: int | None = Field(default=0)
+
+class Extr(ExtrBase, table=True):
+    id: int | None = Field(default=None, primary_key=True)
     filename: str = Field(max_length=255)
     owner_id: uuid.UUID = Field(
         foreign_key="user.id", nullable=False, ondelete="CASCADE"
     )
-    owner: User | None = Relationship(back_populates="extractions")
+    owner: User | None = Relationship(back_populates="extrs")

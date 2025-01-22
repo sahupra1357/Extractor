@@ -11,7 +11,7 @@ from app.gptocr.logger import logger
 
 async def get_pdf_bytes(
     file: Optional[UploadFile],
-    ocr_request: Optional[OCRRequest],
+    #ocr_request: Optional[OCRRequest],
 ) -> bytes:
     """
     Retrieve PDF bytes from an uploaded file or a URL.
@@ -27,20 +27,20 @@ async def get_pdf_bytes(
         HTTPException: If retrieval fails or input is invalid.
     """
     print(file, "at the start")
-    if not file and not ocr_request:
-        logger.warning("No PDF file or URL provided in the request.")
-        raise HTTPException(status_code=400, detail="No PDF file or URL provided.")
+    # if not file and not ocr_request:
+    #     logger.warning("No PDF file or URL provided in the request.")
+    #     raise HTTPException(status_code=400, detail="No PDF file or URL provided.")
 
-    if file and ocr_request and ocr_request.url:
-        logger.warning("Both file and URL provided in the request; only one is allowed.")
-        raise HTTPException(
-            status_code=400, detail="Provide either a file or a URL, not both."
-        )
+    # if file and ocr_request and ocr_request.url:
+    #     logger.warning("Both file and URL provided in the request; only one is allowed.")
+    #     raise HTTPException(
+    #         status_code=400, detail="Provide either a file or a URL, not both."
+    #     )
 
     if file:
         return await read_uploaded_file(file)
-    else:
-        return download_pdf(ocr_request.url)
+    # else:
+    #     return download_pdf(ocr_request.url)
 
 async def read_uploaded_file(file: UploadFile) -> bytes:
     """

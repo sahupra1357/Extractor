@@ -5,7 +5,7 @@ from openai import OpenAI # type: ignore
 import re
 import json
 from app.models import Message
-import cv2 # type: ignore
+# import cv2 # type: ignore
 import numpy as np # type: ignore
 
 
@@ -38,7 +38,8 @@ def process_invoice(file_path: str):
 
     # Preprocess the images
     print("Preprocessing the images...")
-    processed_images = image_preprocessing(images)
+    #processed_images = image_preprocessing(images)
+    processed_images = images
 
     print("Extracting text from the document...")
     extracted_text = []
@@ -73,28 +74,28 @@ def process_invoice(file_path: str):
         # #return summary_compiled
         # return extracted_text        
 
-def image_preprocessing(images):
+# def image_preprocessing(images):
 
-    processed_images = []
-    for image in images:
-        numpy_image = np.array(image)
-        #image = cv2.imread(image)
+#     processed_images = []
+#     for image in images:
+#         numpy_image = np.array(image)
+#         #image = cv2.imread(image)
 
-        # Preprocess the image
-        gray_image = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2GRAY)
-        denoised_image = cv2.fastNlMeansDenoising(gray_image)
-        _, binary_image = cv2.threshold(denoised_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        coords = np.column_stack(np.where(binary_image > 0))
-        angle = cv2.minAreaRect(coords)[-1]
-        if angle < -45:
-            angle = -(90 + angle)
-        else:
-            angle = -angle
+#         # Preprocess the image
+#         gray_image = cv2.cvtColor(numpy_image, cv2.COLOR_BGR2GRAY)
+#         denoised_image = cv2.fastNlMeansDenoising(gray_image)
+#         _, binary_image = cv2.threshold(denoised_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+#         coords = np.column_stack(np.where(binary_image > 0))
+#         angle = cv2.minAreaRect(coords)[-1]
+#         if angle < -45:
+#             angle = -(90 + angle)
+#         else:
+#             angle = -angle
 
-        (h, w) = binary_image.shape[:2]
-        center = (w // 2, h // 2)
-        M = cv2.getRotationMatrix2D(center, angle, 1.0)
-        rotated = cv2.warpAffine(binary_image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)    
-        processed_images.append(rotated)
-    return processed_images
+#         (h, w) = binary_image.shape[:2]
+#         center = (w // 2, h // 2)
+#         M = cv2.getRotationMatrix2D(center, angle, 1.0)
+#         rotated = cv2.warpAffine(binary_image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)    
+#         processed_images.append(rotated)
+#     return processed_images
 
