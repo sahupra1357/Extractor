@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Body
 import os
 import tempfile
 import asyncio
@@ -10,7 +10,11 @@ from app.gptocr.helperFunction import get_pdf_bytes
 from app.gptocr.ocrbatchprocess import process_batches, concatenate_texts
 from app.gptocr.logger import logger
 from app.core.config import settings
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, SessionDep
+import re
+from app.models import Extr, ExtrBase, Item
+from typing import Any
+from sqlmodel import func, select
 
 router = APIRouter(prefix="/gptfiles", tags=["gptfiles"])
 # ----------------------------
@@ -18,9 +22,10 @@ router = APIRouter(prefix="/gptfiles", tags=["gptfiles"])
 # ----------------------------
 @router.post('/ocr', response_model=OCRResponse)
 async def ocr_endpoint(
+    session: SessionDep,
     file: Optional[UploadFile] = File(None),
-    ocr_request: Optional[OCRRequest] = None,
-    current_user: CurrentUser = None
+    #ocr_request: Optional[OCRRequest] = Body(None),
+    current_user: CurrentUser = None,
 ):
     """
     Perform OCR on a provided PDF file or a PDF from a URL.
@@ -36,9 +41,19 @@ async def ocr_endpoint(
         HTTPException: If input validation fails or processing errors occur.
     """
     try:
+        extr_count = read_extr_count(session=session, current_user=current_user)
+        print(f"Extr count is {extr_count}", settings.MAX_EXTR_COUNT)
+        if extr_count >= settings.MAX_EXTR_COUNT:
+            logger.warning("OCR request rejected: maximum number of extractions reached.")
+            raise HTTPException(
+                status_code=403,
+                detail="Maximum number of extractions reached. Please subscribe to use further.",
+            )
+        
         # Retrieve PDF bytes
-        pdf_bytes = await get_pdf_bytes(file, ocr_request)
-        #pdf_bytes = await get_pdf_bytes(file)
+        #pdf_bytes = await get_pdf_bytes(file, ocr_request)
+        print(f"File is {file}")
+        pdf_bytes = await get_pdf_bytes(file)
 
         # Save PDF bytes to a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_pdf_file:
@@ -52,6 +67,9 @@ async def ocr_endpoint(
             image_bytes_list = await loop.run_in_executor(
                 None, convert_pdf_to_images_pymupdf, tmp_pdf_path
             )
+
+            file_extr = ExtrBase(filename=file.filename, pagecount=len(image_bytes_list), owner_id=current_user.id)
+            create_extr(extr_in=file_extr, current_user=current_user, session=session)
 
             # Encode images to base64 data URLs along with page numbers
             image_data_urls = encode_images(image_bytes_list)
@@ -71,7 +89,16 @@ async def ocr_endpoint(
                 raise HTTPException(
                     status_code=500, detail="OCR completed but no text was extracted."
                 )
+            else:
+                #logger.info("OCR completed successfully.", final_text)
 
+                json_match = re.search(r'{.*}', final_text, re.DOTALL)
+                #print("The JSON extracted from the summary is TS:",json_match)
+
+                if json_match:
+                    final_text = json_match.group(0)
+                    #print("The JSON extracted from the text is TS:", final_text)
+                    #logger.info("OCR completed successfully.", final_text)
             return OCRResponse(text=final_text)
 
         finally:
@@ -90,3 +117,37 @@ async def ocr_endpoint(
             status_code=500,
             detail="An unexpected error occurred during OCR processing.",
         )
+
+def create_extr(
+    *, session: SessionDep, current_user: CurrentUser, extr_in: ExtrBase
+) -> Any:
+    """
+    Create new item.
+    """
+    extr = Extr.model_validate(extr_in, update={"owner_id": current_user.id})
+    session.add(extr)
+    session.commit()
+    session.refresh(extr)
+    return extr
+
+def read_extr_count(
+    session: SessionDep, current_user: CurrentUser
+) -> Any:
+    """
+    Retrieve items.
+    """
+
+    if current_user.is_superuser:
+        count_statement = select(func.count()).select_from(Extr)
+        count = session.exec(count_statement).one()
+        statement = select(Extr)
+        items = session.exec(statement).all()
+    else:
+        count_statement = (
+            select(func.count())
+            .select_from(Extr)
+            .where(Extr.owner_id == current_user.id)
+        )
+        count = session.exec(count_statement).one()
+    logger.info(f"Retrieved {count} extractions.")
+    return count
