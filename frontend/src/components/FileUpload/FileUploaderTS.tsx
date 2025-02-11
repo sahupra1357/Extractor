@@ -62,12 +62,12 @@ function FileUploaderTS() {
   return (
     <>
     <Box 
-    css={{
-    "& *": {
-      border: "2px solid",
-      borderColor: "blue.500",
-    },
-    }}    
+    // css={{
+    // "& *": {
+    //   border: "2px solid",
+    //   borderColor: "blue.500",
+    // },
+    // }}    
     >
       <FormControl as="form" display="flex" py={4}>
         <HStack spacing={2} w="full">
@@ -78,8 +78,8 @@ function FileUploaderTS() {
             placeholder="File path will be displayed here"
             flexShrink={1}
             minW={0}
-            px={2}
-            py={1}
+            // px={2}
+            // py={1}
             borderRadius="md"
           />
           {/* Hidden File Input */}
@@ -99,7 +99,7 @@ function FileUploaderTS() {
             px={2}
             py={1}
             borderRadius="md">
-            Choose xxxxxxxxxx FileTS
+            Choose File
           </Button>                        
           {selectedFile && (
           <Button

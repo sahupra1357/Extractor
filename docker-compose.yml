@@ -30,7 +30,7 @@ services:
   #   #   db:
   #   #     condition: service_healthy
   #   #     restart: true
-  #   command: bash scripts/prestart.sh
+  #   #command: bash scripts/prestart.sh
   #   env_file:
   #     - .env
   #   environment:
@@ -81,7 +81,6 @@ services:
       - EMAILS_FROM_EMAIL=${EMAILS_FROM_EMAIL}
       #- POSTGRES_SERVER=db
       - POSTGRES_SERVER=${POSTGRES_SERVER}
-      #- POSTGRES_SERVER={host.docker.internal}
       - POSTGRES_PORT=${POSTGRES_PORT}
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}

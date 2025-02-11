@@ -149,7 +149,7 @@ function Extractor() {
   return (
     <Container maxW="full">
       <Heading size="lg" textAlign={{ base: "center", md: "left" }} pt={12}>
-        Data Extraction abcd where are you form
+        Data Extraction
       </Heading>
 
       {/* <FileUploader /> */}
