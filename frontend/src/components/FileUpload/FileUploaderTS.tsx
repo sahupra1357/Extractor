@@ -1,12 +1,13 @@
 import { useState, useRef, ChangeEvent} from 'react';
 import {FilesServiceTS, UploadFileData, UploadFileResponse } from '../../client';
 import { Box, FormControl, Input, Button, HStack,Textarea } from "@chakra-ui/react";
-
+import { Spinner } from "@chakra-ui/react"
 
 function FileUploaderTS() {
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [filePath, setFilePath] = useState('');
   const [responseJson, setResponseJson] = useState('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -26,6 +27,7 @@ function FileUploaderTS() {
     if (!selectedFile) {
       return;
     }
+    setIsLoading(true);
     // setFileUploaded(selectedFile.name);
     const formData = new FormData();
     formData.append('photo', selectedFile);
@@ -57,6 +59,7 @@ function FileUploaderTS() {
       console.error('Error uploading file:', error);
       setResponseJson(`Error uploading file: ${error.message}`);
     }
+    setIsLoading(false);
   };  
 
   return (
@@ -121,7 +124,9 @@ function FileUploaderTS() {
       </FormControl>
     </Box>
     <Box>
-    {responseJson && (
+    {isLoading ? (
+        <Spinner size="xl" color="ui.main" />
+      ) : (responseJson && (
           <Textarea
             value={responseJson}
             isReadOnly
@@ -130,7 +135,7 @@ function FileUploaderTS() {
             borderRadius="md"
             rows={20}
           />
-        )}
+        ))}
     </Box>
     </>
   );
