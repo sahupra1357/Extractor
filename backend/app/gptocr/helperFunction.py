@@ -26,7 +26,7 @@ async def get_pdf_bytes(
     Raises:
         HTTPException: If retrieval fails or input is invalid.
     """
-    print(file, "at the start")
+    print(file, "at the start of get_pdf_bytes")
     # if not file and not ocr_request:
     #     logger.warning("No PDF file or URL provided in the request.")
     #     raise HTTPException(status_code=400, detail="No PDF file or URL provided.")

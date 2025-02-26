@@ -43,7 +43,7 @@ async def ocr_endpoint(
     try:
         extr_count = read_extr_count(session=session, current_user=current_user)
         print(f"Extr count is {extr_count}", settings.MAX_EXTR_COUNT)
-        if extr_count >= settings.MAX_EXTR_COUNT:
+        if extr_count > settings.MAX_EXTR_COUNT:
             logger.warning("OCR request rejected: maximum number of extractions reached.")
             raise HTTPException(
                 status_code=403,
@@ -75,8 +75,8 @@ async def ocr_endpoint(
             image_data_urls = encode_images(image_bytes_list)
 
             # Create batches for OCR
-            #batches = create_batches(image_data_urls, settings.BATCH_SIZE)
-            batches = create_batches(image_data_urls, 1)
+            batches = create_batches(image_data_urls, settings.BATCH_SIZE)
+            #batches = create_batches(image_data_urls, 1)
 
             # Process OCR batches in parallel
             extracted_texts = await process_batches(batches)
@@ -89,16 +89,16 @@ async def ocr_endpoint(
                 raise HTTPException(
                     status_code=500, detail="OCR completed but no text was extracted."
                 )
-            else:
-                #logger.info("OCR completed successfully.", final_text)
+            # else:
+            #     logger.info("OCR completed successfully.", final_text)
 
-                json_match = re.search(r'{.*}', final_text, re.DOTALL)
-                #print("The JSON extracted from the summary is TS:",json_match)
+            #     json_match = re.search(r'{.*}', final_text, re.DOTALL)
+            #     print("The JSON extracted from the summary is TS:",json_match)
 
-                if json_match:
-                    final_text = json_match.group(0)
-                    #print("The JSON extracted from the text is TS:", final_text)
-                    #logger.info("OCR completed successfully.", final_text)
+            #     if json_match:
+            #         final_text = json_match.group(0)
+            #         #print("The JSON extracted from the text is TS:", final_text)
+            #         #logger.info("OCR completed successfully.", final_text)
             return OCRResponse(text=final_text)
 
         finally:

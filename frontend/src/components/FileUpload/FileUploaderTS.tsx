@@ -1,5 +1,5 @@
 import { useState, useRef, ChangeEvent} from 'react';
-import {FilesServiceTS, UploadFileData, UploadFileResponse } from '../../client';
+import {GptfilesService, GptfilesOcrEndpointData, GptfilesOcrEndpointResponse } from '../../client';
 import { Box, FormControl, Input, Button, HStack,Textarea } from "@chakra-ui/react";
 import { Spinner } from "@chakra-ui/react"
 
@@ -11,6 +11,7 @@ function FileUploaderTS() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  console.log("Component rendered");
   console.log("responseJson ", responseJson);
   const handleButtonClick = () => {
     fileInputRef.current?.click(); // Trigger hidden file input
@@ -18,9 +19,11 @@ function FileUploaderTS() {
 
   const handleFileChange = (event : ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    console.log(file);
+    console.log("File selected: ", file);
     setSelectedFile(file);
-    setFilePath(event.target.value);
+    if (file) {
+      setFilePath(file.name); // Set only the file name
+    }
   };
 
   const handleUpload = async () => {
@@ -45,15 +48,24 @@ function FileUploaderTS() {
       // const data = await response.json();
       // setResponseJson(JSON.stringify(data, null, 2));
 
-      const uploadData: UploadFileData = { formData: {
+      const uploadData: GptfilesOcrEndpointData = { formData: {
         file: selectedFile,
       } };
-      const response: UploadFileResponse = await FilesServiceTS.uploadFileTS(uploadData);
+      const response: GptfilesOcrEndpointResponse = await GptfilesService.ocrEndpoint(uploadData);
       console.log('Upload successful:', response);
       if (!response) {
         throw new Error(`Server error: ${response}`);
       }else{
-        setResponseJson(JSON.stringify(response, null, 2));
+        // let parsedResponse;
+        // try {
+        //   parsedResponse = JSON.parse(response.text);
+        // } catch (e) {
+        //   parsedResponse = response.text;
+        // }
+        // setResponseJson(JSON.stringify(parsedResponse, null, 2));
+        const formattedResponse = response.text.replace(/\n/g, '\n'); // Replace \n with actual line breaks
+
+        setResponseJson(formattedResponse);
       }
     } catch (error: any) {
       console.error('Error uploading file:', error);

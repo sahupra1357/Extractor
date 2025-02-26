@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     FRONTEND_HOST: str = "http://localhost:5173"
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
     MAX_EXTR_COUNT: int = 5
+    MAX_CONCURRENT_PDF_CONVERSION: int = 4
+    BATCH_SIZE: int = 1
+    OPENAI_DEPLOYMENT_ID: str ="gpt-4o"
 
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)

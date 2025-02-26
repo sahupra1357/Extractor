@@ -114,59 +114,25 @@ class OCRService:
 
                 # Output Format
 
-                - Provide the extracted information in a json format. Some fields might not available in the extract, generate blank value for them but do not miss anything.
+                - Provide the extracted information in a bulleted or table format for easy readability.
                 - Ensure all relevant details are included and clearly labeled for each category of information.
 
                 # Examples
 
                 - **Example 1**:
-                    "Invoice": {
-                    "Seller": {
-                        "Name": "Aadhya Metal Services",
-                        "Address": "Ground Floor 37, SNS Atrium, Behind HP Petrol Pump, Ranoli GIDC, Vadodara 391350",
-                        "GSTIN": "24AMZPD9060E1ZU",
-                        "State" : "--"
-                        "Code" : "--"
-                        "Contact": "0777901 1258 / 09714563310",
-                        "Email": "aadhyametalservices@gmail.com"
-
-                    },
-                    "Buyer": {
-                        "Name": "THERMAX LIMITED.",
-                        "Address": "Plot No:21/1,2,3, GIDC SAVLI, PO: MAJUSAR, TA: SAVLI, DIST: VADODARA-391 774",
-                        "GSTIN": "24AAACT3910D1ZY",
-                        "State" : "--"
-                        "Code" : "--"
-                        "Contact": "Mr. Vishal D Nadgouda"
-                        "MobileNo": "+91 9033508872, +91 2667 266532"
-                        "Phone No": "__"
-                    },
-                    "Invoice_Number": "AMS/40/24-25",
-                    "Date": "05-09-2024",
-                    "Items": [
-                        {
-                        "Challn No" : "",
-                        "Description": "IBR test plates upto 10 mm",
-                        "Part No/ Item Code" : "",
-                        "HSN/SAC" : "",
-                        "Quantity": 1,
-                        "Unit_Price": 1400,
-                        "Total": 1400
-                        }
-                    ],
-                    "CGST":"2176.2",
-                    "SGST":"2176.2",
-                    "IGST":"",
-                    "Round off":"",
-                    "Total_Amount": 28532,
-                    "Bank_Details": {
-                        "Branch_Name": "Raj Estate, Near Bus Stand NH 16, Dasharath, Distt: Baroda (Gujarat)",
-                        "Account_Number": "42828617501",
-                        "IFS_Code": "SBIN0015242",
-                        "MICR_Code": "38000208"
-                    }
-                    }
-
+                - Vendor Name: [Vendor Name]
+                - Vendor Address: [Vendor Address]
+                - Contact: [Contact Information]
+                - Invoice Number: [Invoice Number]
+                - Date of Issue: [Date]
+                - Due Date: [Due Date]
+                - Items:
+                    - Item 1: [Item Description, Quantity, Unit Price, Total Price]
+                    - Item 2: [Item Description, Quantity, Unit Price, Total Price]
+                - Payment Terms: [Terms Description]
+                - Total Amount Due: [Total Amount]
+                - Currency: [Currency]
+                
                 # Notes
 
                 - Ensure that translations preserve the meaning and context of the original invoice.
