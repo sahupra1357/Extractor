@@ -4,8 +4,10 @@ import type { CancelablePromise } from "./core/CancelablePromise"
 import { OpenAPI } from "./core/OpenAPI"
 import { request as __request } from "./core/request"
 import type {
-  UploadFileData,
-  UploadFileResponse,
+  FilesProcessDocumentInvoiceData,
+  FilesProcessDocumentInvoiceResponse,
+  GptfilesOcrEndpointData,
+  GptfilesOcrEndpointResponse,
   ItemsReadItemsData,
   ItemsReadItemsResponse,
   ItemsCreateItemData,
@@ -25,6 +27,12 @@ import type {
   LoginResetPasswordResponse,
   LoginRecoverPasswordHtmlContentData,
   LoginRecoverPasswordHtmlContentResponse,
+  PrivateCreateUserData,
+  PrivateCreateUserResponse,
+  UploadfilesUploadFileTsData,
+  UploadfilesUploadFileTsResponse,
+  UploadfilesUploadFileTsppData,
+  UploadfilesUploadFileTsppResponse,
   UsersReadUsersData,
   UsersReadUsersResponse,
   UsersCreateUserData,
@@ -48,20 +56,20 @@ import type {
   UtilsHealthCheckResponse,
 } from "./types.gen"
 
-export class FilesServiceTS {
+export class FilesService {
   /**
-   * Upload File
+   * Process Document Invoice
    * @param data The data for the request.
    * @param data.formData
    * @returns unknown Successful Response
    * @throws ApiError
    */
-  public static uploadFileTS(
-    data: UploadFileData,
-  ): CancelablePromise<UploadFileResponse> {
+  public static processDocumentInvoice(
+    data: FilesProcessDocumentInvoiceData,
+  ): CancelablePromise<FilesProcessDocumentInvoiceResponse> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/api/v1/files/uploadts",
+      url: "/api/v1/files/upload",
       formData: data.formData,
       mediaType: "multipart/form-data",
       errors: {
@@ -71,20 +79,31 @@ export class FilesServiceTS {
   }
 }
 
-export class FilesService {
+export class GptfilesService {
   /**
-   * Upload File
+   * Ocr Endpoint
+   * Perform OCR on a provided PDF file or a PDF from a URL.
+   *
+   * Args:
+   * file (Optional[UploadFile]): The uploaded PDF file.
+   * ocr_request (Optional[OCRRequest]): The OCR request containing a PDF URL.
+   *
+   * Returns:
+   * OCRResponse: The response containing the extracted text.
+   *
+   * Raises:
+   * HTTPException: If input validation fails or processing errors occur.
    * @param data The data for the request.
    * @param data.formData
-   * @returns unknown Successful Response
+   * @returns OCRResponse Successful Response
    * @throws ApiError
    */
-  public static uploadFile(
-    data: UploadFileData,
-  ): CancelablePromise<UploadFileResponse> {
+  public static ocrEndpoint(
+    data: GptfilesOcrEndpointData = {},
+  ): CancelablePromise<GptfilesOcrEndpointResponse> {
     return __request(OpenAPI, {
       method: "POST",
-      url: "/api/v1/files/upload",
+      url: "/api/v1/gptfiles/ocr",
       formData: data.formData,
       mediaType: "multipart/form-data",
       errors: {
@@ -313,6 +332,74 @@ export class LoginService {
       path: {
         email: data.email,
       },
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+}
+
+export class PrivateService {
+  /**
+   * Create User
+   * Create a new user.
+   * @param data The data for the request.
+   * @param data.requestBody
+   * @returns UserPublic Successful Response
+   * @throws ApiError
+   */
+  public static createUser(
+    data: PrivateCreateUserData,
+  ): CancelablePromise<PrivateCreateUserResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/private/users/",
+      body: data.requestBody,
+      mediaType: "application/json",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+}
+
+export class UploadfilesService {
+  /**
+   * Upload File Ts
+   * @param data The data for the request.
+   * @param data.formData
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static uploadFileTs(
+    data: UploadfilesUploadFileTsData,
+  ): CancelablePromise<UploadfilesUploadFileTsResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/files/uploadts",
+      formData: data.formData,
+      mediaType: "multipart/form-data",
+      errors: {
+        422: "Validation Error",
+      },
+    })
+  }
+
+  /**
+   * Upload File Tspp
+   * @param data The data for the request.
+   * @param data.formData
+   * @returns unknown Successful Response
+   * @throws ApiError
+   */
+  public static uploadFileTspp(
+    data: UploadfilesUploadFileTsppData,
+  ): CancelablePromise<UploadfilesUploadFileTsppResponse> {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/v1/files/uploadtspp",
+      formData: data.formData,
+      mediaType: "multipart/form-data",
       errors: {
         422: "Validation Error",
       },

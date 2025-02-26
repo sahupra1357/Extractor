@@ -69,8 +69,8 @@ def convert_pdf_to_images_pymupdf(pdf_path: str, zoom: int = 2) -> List[Tuple[in
 
         image_bytes_list: List[Tuple[int, bytes]] = []  # List of (page_num, image_bytes)
 
-        #with ProcessPoolExecutor(max_workers=settings.MAX_CONCURRENT_PDF_CONVERSION) as executor:
-        with ProcessPoolExecutor(max_workers=4) as executor:
+        with ProcessPoolExecutor(max_workers=settings.MAX_CONCURRENT_PDF_CONVERSION) as executor:
+        #with ProcessPoolExecutor(max_workers=4) as executor:
             # Submit all tasks
             future_to_page = {
                 executor.submit(convert_page_to_image, args): args[1]
