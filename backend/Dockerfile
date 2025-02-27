@@ -46,13 +46,14 @@ COPY ./app /app/app
 
 #ENV CLOUDSDK_CONFIG=/app/config
 
-COPY ./application_default_credentials.json /app/config/application_default_credentials.json
+#COPY ./application_default_credentials.json /app/config/application_default_credentials.json
 
-ENV GOOGLE_APPLICATION_CREDENTIALS=/app/config/application_default_credentials.json
+#ENV GOOGLE_APPLICATION_CREDENTIALS=/app/config/application_default_credentials.json
 
 # Sync the project
 # Ref: https://docs.astral.sh/uv/guides/integration/docker/#intermediate-layers
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync
 
-CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
+#CMD ["fastapi", "run", "--workers", "4", "app/main.py"]
+CMD ["fastapi", "run", "app/main.py"]
