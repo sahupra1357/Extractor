@@ -55,10 +55,11 @@ async def read_uploaded_file(file: UploadFile) -> bytes:
     Raises:
         HTTPException: If the file is invalid or reading fails.
     """
-    if file.content_type != "application/pdf":
+    #if file.content_type != "application/pdf":
+    if file.content_type not in["application/pdf", "image/jpeg", "image/png"]:
         logger.warning(f"Uploaded file has incorrect content type: {file.content_type}")
         raise HTTPException(
-            status_code=400, detail="Uploaded file is not a PDF."
+            status_code=400, detail="Uploaded file is not a PDF/JPEG/PNG."
         )
     try:
         pdf_bytes = await file.read()

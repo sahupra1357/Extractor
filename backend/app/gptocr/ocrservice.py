@@ -46,8 +46,8 @@ class OCRService:
                 )
                 #response = await self.client.chat.completions.create(
                 response = self.client.chat.completions.create(
-                    #model=Settings.OPENAI_DEPLOYMENT_ID,
-                    model="gpt-4o",
+                    model=settings.OPENAI_DEPLOYMENT_ID,
+                    #model="gpt-4o",
                     messages=messages,
                     temperature=0.1,
                     max_tokens=4000,
@@ -90,15 +90,28 @@ class OCRService:
         Returns:
             List[dict]: The message payload.
         """
-        user_message = """
-                You are an expert in bookkeeping. Your task is to read and analyze financial invoices or bills, translating them into English if needed, and then extract all relevant purchase information.
+        system_message = """
+                You are an OCR assistant and have ability to extract content from any type of document such as passport, driving license, adhar card, voter id card, green card, citizenship card, birth certificate, invoices, bills, contract, etc.
+                Extract all text from the provided images (Describe images as if you're explaining them to a blind person eg: `[Image: In this picture, 8 people are posed hugging each other]`), which are attached to the document. 
+                Use markdown formatting for:\n\n- Headings (# for main, ## for sub)\n- Lists (- for unordered, 1. for ordered)\n- Emphasis (* for italics, ** for bold)\n- Links ([text](URL))\n- Tables (use markdown table format)\n\nFor non-text elements, describe them: [Image: Brief description]\n\nMaintain logical flow and use horizontal rules (---) to separate sections if needed. 
+                Adjust formatting to preserve readability.\n\nNote any issues or ambiguities at the end of your output.\n\nBe thorough and accurate in transcribing all text content.
+                
 
                 ## Steps
-
                 1. **Translation**
-                - If the invoice or bill is not in English, translate the entire document into English.
+                - If the image is not in English, transform and translate the entire document into English.
+
+                2. **Classification**
+                - Identify the type of document (e.g., passport, driving license, birth certificate, invoice, electric bill, contract, etc.).
 
                 2. **Extraction**
+                - Identify key pieces of information typically present personal informations in documents of type passport, driving license, adhar card, voter id card, green card, citizenship card, birth certificate:
+                    - **Personal Information**: Name, address, date
+                    - **Identification Number**: Passport number, driving license number, adhar card number, voter id card number, green card number, citizenship card number, birth certificate number.
+                    - **Date of Issue**: Date of issue of the document.
+                    - **Date of Expiry**: Date of expiry of the document.
+                    - **Additional Information**: Any other relevant details present in the document.
+
                 - Identify key pieces of information typically present in invoices and bills:
                     - **Vendor Information**: Name, address, contact details, GSTIN, code.
                     - **Invoice Details**: Invoice number, date of issue, due date.
@@ -120,6 +133,15 @@ class OCRService:
                 # Examples
 
                 - **Example 1**:
+                - Name: [Name]
+                - Address: [Address]
+                - Date of Birth: [Date]
+                - Identification Number: [ID Number]
+                - Date of Issue: [Date]
+                - Date of Expiry: [Date]
+                - Additional Information: [Details]
+
+                - **Example 2**:
                 - Vendor Name: [Vendor Name]
                 - Vendor Address: [Vendor Address]
                 - Contact: [Contact Information]
@@ -137,17 +159,17 @@ class OCRService:
 
                 - Ensure that translations preserve the meaning and context of the original invoice.
                 - Extraction should prioritize accuracy and clarity, maintaining the integrity of financial data.
-                - Never skip any context! Convert document as is be creative to use markdown effectively to reproduce the same document by using markdown. Translate image text to markdown sequentially. Preserve order and completeness. Separate images with `---`. No skips or comments. Start with first image immediately.".
+                - If any information is unclear or missing, note the issue at the end of the output.
                     """
 
         messages = [
             {
                 "role": "system",
-                "content": "You are an OCR assistant. Extract all text from the provided images (Describe images as if you're explaining them to a blind person eg: `[Image: In this picture, 8 people are posed hugging each other]`), which are attached to the document. Use markdown formatting for:\n\n- Headings (# for main, ## for sub)\n- Lists (- for unordered, 1. for ordered)\n- Emphasis (* for italics, ** for bold)\n- Links ([text](URL))\n- Tables (use markdown table format)\n\nFor non-text elements, describe them: [Image: Brief description]\n\nMaintain logical flow and use horizontal rules (---) to separate sections if needed. Adjust formatting to preserve readability.\n\nNote any issues or ambiguities at the end of your output.\n\nBe thorough and accurate in transcribing all text content.",
+                "content": system_message,
             },
             {
                 "role": "user",
-                "content": user_message,
+                "content": "Never skip any context! Convert document as is be creative to use markdown effectively to reproduce the same document by using markdown. Translate image text to markdown sequentially. Preserve order and completeness. Separate images with `---`. No skips or comments. Start with first image immediately.",
             },
         ]
 
