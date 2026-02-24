@@ -1,5 +1,8 @@
 services:
   backend:
+    # Database is external (configured via .env POSTGRES_* values).
+    # On startup this service runs `scripts/prestart.sh` to initialize DB
+    # (wait/check, Alembic migrations, initial seed data), then starts API.
     image: '${DOCKER_IMAGE_BACKEND?Variable not set}:${TAG-latest}'
     restart: always
     env_file:
@@ -31,6 +34,7 @@ services:
 
     ports:
       - "8000:8000"
+    command: bash -c "bash scripts/prestart.sh && fastapi run app/main.py"
     build:
       context: ./backend
   frontend:
