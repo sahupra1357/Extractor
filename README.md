@@ -22,7 +22,13 @@ Document extraction platform with a FastAPI backend, React frontend, and OCR/LLM
 
 ## Environment configuration
 
-The backend loads variables from a top-level `.env` file. There is no committed `.env.example`, so create `.env` in the repository root.
+The backend loads variables from a top-level `.env` file.
+
+Create your env file from the example:
+
+```bash
+cp .env.example .env
+```
 
 Minimum variables to run the stack:
 
@@ -52,6 +58,8 @@ SENTRY_DSN=
 ```
 
 > Note: this repo's default compose files do **not** define a Postgres container. Point `POSTGRES_*` to an existing database.
+
+> Note: both `docker-compose.yml` and `docker-compose.override.yml` run `backend/scripts/prestart.sh` before starting FastAPI, so migrations/initial seed are applied on backend startup.
 
 ## Quick start (Docker)
 
